@@ -17,16 +17,17 @@ phases:
       - echo "Build started..."
       - echo "Creating Lambda deployment package..."
       - zip -r function.zip . -x "buildspec*" "*.git*" "*.md" "node_modules/.cache/*" "function.zip"
+      - ls -lh function.zip    # Verify zip file creation
 
   post_build:
     commands:
       - echo "Build completed on $(date)"
       - echo "Updating Lambda function code..."
       - aws lambda update-function-code \
-          --function-name testlambda \
+          --function-name $LAMBDA_FUNCTION_NAME \
           --zip-file fileb://function.zip \
           --publish \
-          --region ap-southeast-2
+          --region $AWS_DEFAULT_REGION
       - echo "✅ Lambda function code updated successfully!"
 
 artifacts:
