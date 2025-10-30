@@ -1,4 +1,5 @@
 version: 0.2
+
 env:
   variables:
     LAMBDA_FUNCTION_NAME: "testlambda"
@@ -14,20 +15,34 @@ phases:
 
   build:
     commands:
-      - echo "Build started..."
-      - echo "Creating Lambda deployment package..."
-      # Exclude package-lock.json and other unnecessary files
-      - zip -r function.zip . -x "buildspec*" "*.git*" "*.md" "package-lock.json" "node_modules/.cache/*"
+      - echo "=== Building Lambda Deployment Package ==="
+      - echo "Cleaning previous zips (if any)..."
+      - rm -f function.zip
+      - echo "Creating zip package..."
+      - zip -r function.zip . \
+          -x "buildspec*" "*.git*" "*.md" "package-lock.json" "node_modules/.cache/*"
 
   post_build:
     commands:
-      - echo "Build completed on $(date)"
+      - echo "=== Build completed on $(date) ==="
+      - echo "Verifying function.zip exists..."
+      - ls -lh function.zip || { echo "❌ Zip file not found!"; exit 1; }
+
+      - echo "Checking contents of zip file..."
+      - unzip -l function.zip | head -20 || { echo "❌ Failed to read zip file"; exit 1; }
+
       - echo "Updating Lambda function code..."
-      - aws lambda update-function-code \
-          --function-name $LAMBDA_FUNCTION_NAME \
-          --zip-file fileb://function.zip \
-          --publish
-      - echo "✅ Lambda function code updated successfully!"
+      - |
+        if aws lambda update-function-code \
+            --function-name "$LAMBDA_FUNCTION_NAME" \
+            --zip-file fileb://function.zip \
+            --publish \
+            --region "$AWS_DEFAULT_REGION"; then
+          echo "✅ Lambda function updated successfully!"
+        else
+          echo "❌ Lambda update failed! Check function name, permissions, or file size (max 50 MB)."
+          exit 1
+        fi
 
 artifacts:
   files:
