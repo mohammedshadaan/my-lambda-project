@@ -1,40 +1,39 @@
 version: 0.2
-
 env:
   variables:
     LAMBDA_FUNCTION_NAME: "testlambda"
     AWS_DEFAULT_REGION: "ap-southeast-2"
+    S3_BUCKET_NAME: "triggerlambda301025"
 
 phases:
   install:
     runtime-versions:
       nodejs: 20
     commands:
-      - echo "Installing dependencies (if any)..."
+      - echo "Installing Node.js dependencies..."
       - npm install --production || true
 
   build:
     commands:
-      - echo "Zipping Lambda code..."
+      - echo "Build started..."
+      - echo "Creating Lambda deployment package..."
       - mkdir -p output
-      - cp -r *.js package*.json output/
-      - cd output
-      - zip -r function.zip .
-      - cd ..
+      - zip -r output/function.zip . -x "buildspec*" "*.git*" "*.md" "node_modules/.cache/*"
 
   post_build:
     commands:
-      - echo "Checking files before deploy..."
-      - ls -lh output/
-      - echo "Deploying Lambda code..."
+      - echo "Build completed on $(date)"
+      - echo "Uploading package to S3..."
+      - aws s3 cp output/function.zip s3://$S3_BUCKET_NAME/testlambda/function.zip
+      - echo "Updating Lambda function code from S3..."
       - aws lambda update-function-code \
           --function-name $LAMBDA_FUNCTION_NAME \
-          --zip-file fileb://output/function.zip \
+          --s3-bucket $S3_BUCKET_NAME \
+          --s3-key testlambda/function.zip \
           --publish
-      - echo "Lambda function updated successfully!"
+      - echo "✅ Lambda function code updated successfully!"
 
 artifacts:
   files:
     - 'output/function.zip'
   discard-paths: yes
-
