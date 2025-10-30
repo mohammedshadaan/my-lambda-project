@@ -3,39 +3,25 @@ env:
   variables:
     LAMBDA_FUNCTION_NAME: "testlambda"
     AWS_DEFAULT_REGION: "ap-southeast-2"
-
 phases:
   install:
     runtime-versions:
       nodejs: 20
     commands:
-      - echo "Installing Node.js dependencies..."
-      - npm install --production || true
-
+      - echo Installing Node.js dependencies...
+      - npm install --production
   build:
     commands:
-      - echo "📦 Creating Lambda ZIP package..."
-      - mkdir -p output
-      - zip -r output/function.zip index.js node_modules package*.json -x "*.git*" "*.md" || true
-      - echo "✅ ZIP file created"
-
+      - echo Build started
+      - echo Creating Lambda deployment package...
+      - zip -r function.zip . -x "buildspec*" "*.git*" "*.md" "node_modules/.cache/*"
   post_build:
     commands:
-      - echo "🧩 Verifying ZIP file..."
-      - ls -lh output/function.zip
-      - unzip -t output/function.zip || (echo "❌ ZIP file invalid" && exit 1)
-      - echo "✅ ZIP verification passed"
-
-      - echo "🚀 Updating Lambda function..."
-      - aws lambda update-function-code \
-          --function-name $LAMBDA_FUNCTION_NAME \
-          --zip-file fileb://output/function.zip \
-          --publish \
-          --region $AWS_DEFAULT_REGION || (echo "❌ Lambda update failed" && exit 1)
-
-      - echo "✅ Lambda function code updated successfully!"
-
+      - echo Build completed on `date`
+      - echo Updating Lambda function code...
+      - aws lambda update-function-code --function-name $LAMBDA_FUNCTION_NAME --zip-file fileb://function.zip --publish
+      - echo Lambda function code updated successfully!
 artifacts:
   files:
-    - 'output/function.zip'
+    - 'function.zip'
   discard-paths: yes
