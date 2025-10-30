@@ -1,4 +1,5 @@
 version: 0.2
+
 env:
   variables:
     LAMBDA_FUNCTION_NAME: "testlambda"
@@ -10,30 +11,28 @@ phases:
     runtime-versions:
       nodejs: 20
     commands:
-      - echo "Installing Node.js dependencies..."
+      - echo "📦 Installing Node.js dependencies..."
       - npm install --production || true
 
   build:
     commands:
-      - echo "Build started..."
-      - echo "Creating Lambda deployment package..."
+      - echo "🏗️ Build started..."
       - mkdir -p output
+      - echo "📦 Creating Lambda deployment package..."
       - zip -r output/function.zip . -x "buildspec*" "*.git*" "*.md" "node_modules/.cache/*"
 
   post_build:
     commands:
-      - echo "Build completed on $(date)"
-      - echo "Uploading package to S3..."
+      - echo "✅ Build completed on $(date)"
+      - echo "☁️ Uploading package to S3..."
       - aws s3 cp output/function.zip s3://$S3_BUCKET_NAME/testlambda/function.zip
-      - echo "Updating Lambda function code from S3..."
-      - aws lambda update-function-code \
-          --function-name $LAMBDA_FUNCTION_NAME \
-          --s3-bucket $S3_BUCKET_NAME \
-          --s3-key testlambda/function.zip \
-          --publish
-      - echo "✅ Lambda function code updated successfully!"
+      - echo "🔍 Checking uploaded file..."
+      - aws s3 ls s3://$S3_BUCKET_NAME/testlambda/
+      - echo "🚀 Updating Lambda function code..."
+      - aws lambda update-function-code --function-name $LAMBDA_FUNCTION_NAME --s3-bucket $S3_BUCKET_NAME --s3-key testlambda/function.zip --publish
+      - echo "🎉 Lambda function code updated successfully!"
 
 artifacts:
   files:
-    - 'output/function.zip'
+    - output/function.zip
   discard-paths: yes
