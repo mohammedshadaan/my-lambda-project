@@ -15,31 +15,26 @@ phases:
 
   build:
     commands:
-      - echo "Building Lambda package..."
-      - mkdir output
+      - echo "Zipping Lambda code..."
+      - mkdir -p output
       - cp -r *.js package*.json output/
       - cd output
-      - zip -r ../function.zip .
+      - zip -r function.zip .
       - cd ..
 
   post_build:
     commands:
-      - echo "Build completed on $(date)"
+      - echo "Checking files before deploy..."
+      - ls -lh output/
       - echo "Deploying Lambda code..."
       - aws lambda update-function-code \
           --function-name $LAMBDA_FUNCTION_NAME \
-          --zip-file fileb://function.zip \
+          --zip-file fileb://output/function.zip \
           --publish
-
-      # Optional: Store unzipped files to S3 for visibility
-      - echo "Uploading readable source to S3..."
-      - aws s3 sync ./output s3://my-lambda-readable-code-bucket/testlambda/ --delete
-
       - echo "Lambda function updated successfully!"
 
 artifacts:
   files:
-    - '**/*.js'
-    - 'package.json'
-    - 'function.zip'
-  discard-paths: no
+    - 'output/function.zip'
+  discard-paths: yes
+
