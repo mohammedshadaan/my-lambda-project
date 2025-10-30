@@ -9,25 +9,25 @@ phases:
     runtime-versions:
       nodejs: 20
     commands:
-      - echo Installing Node.js dependencies...
+      - echo "Installing Node.js dependencies..."
       - npm install --production || true
 
   build:
     commands:
-      - echo Build started
-      - cd testlambda
-      - zip -r ../function.zip * -x "buildspec*" "*.git*" "*.md" "node_modules/.cache/*"
-      - cd ..
+      - echo "Build started..."
+      - echo "Creating Lambda deployment package..."
+      - zip -r function.zip . -x "buildspec*" "*.git*" "*.md" "node_modules/.cache/*" "function.zip"
 
   post_build:
     commands:
-      - echo Build completed on $(date)
-      - echo Updating Lambda function code...
+      - echo "Build completed on $(date)"
+      - echo "Updating Lambda function code..."
       - aws lambda update-function-code \
-          --function-name $LAMBDA_FUNCTION_NAME \
+          --function-name testlambda \
           --zip-file fileb://function.zip \
-          --publish
-      - echo ✅ Lambda function updated successfully!
+          --publish \
+          --region ap-southeast-2
+      - echo "✅ Lambda function code updated successfully!"
 
 artifacts:
   files:
