@@ -1,27 +1,40 @@
-version: 0.2
-env:
-  variables:
-    LAMBDA_FUNCTION_NAME: "testlambda"
-    AWS_DEFAULT_REGION: "ap-southeast-2"
-phases:
-  install:
-    runtime-versions:
-      nodejs: 20
-    commands:
-      - echo Installing Node.js dependencies...
-      - npm install --production
-  build:
-    commands:
-      - echo Build started
-      - echo Creating Lambda deployment package...
-      - zip -r function.zip . -x "buildspec*" "*.git*" "*.md" "node_modules/.cache/*"
-  post_build:
-    commands:
-      - echo Build completed on `date`
-      - echo Updating Lambda function code...
-      - aws lambda update-function-code --function-name $LAMBDA_FUNCTION_NAME --zip-file fileb://function.zip --publish
-      - echo Lambda function code updated successfully!
-artifacts:
-  files:
-    - 'function.zip'
-  discard-paths: yes
+// index.js
+
+// ✅ AWS Lambda function deployed via CodePipeline + CodeBuild
+// Demonstrates: logging, environment variables, structured response, and error handling
+
+exports.handler = async (event) => {
+  console.log("🚀 Lambda execution started:", new Date().toISOString());
+  console.log("📦 Incoming event:", JSON.stringify(event, null, 2));
+
+  try {
+    // Example: Read environment variables (set in Lambda configuration)
+    const environment = process.env.ENVIRONMENT || "dev";
+    const version = process.env.VERSION || "1.0.0";
+
+    // Example: Main logic — simple success message
+    const result = {
+      message: "✅ Lambda deployed successfully via GitHub → CodeBuild → Lambda!",
+      environment,
+      version,
+      timestamp: new Date().toISOString(),
+    };
+
+    console.log("✅ Function executed successfully:", result);
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify(result),
+    };
+  } catch (error) {
+    console.error("❌ Error executing Lambda:", error);
+
+    return {
+      statusCode: 500,
+      body: JSON.stringify({
+        message: "Internal Server Error",
+        error: error.message,
+      }),
+    };
+  }
+};
