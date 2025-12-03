@@ -5,36 +5,28 @@ env:
     LAMBDA_FUNCTION_NAME: "job_campaign_worker"
     AWS_DEFAULT_REGION: "ap-southeast-2"
     S3_BUCKET: "triggerlambda0312255"
-    S3_KEY: "job_campaign_worker/function.zip"
+    S3_KEY: "lambda/function.zip"
 
 phases:
   install:
-    runtime-versions:
-      nodejs: 20
     commands:
-      - echo "📦 Installing dependencies..."
-      - npm ci --omit=dev
+      - echo "Nothing to install"
 
   build:
     commands:
-      - echo "🏗️ Packaging Lambda..."
       - mkdir package
       - cp -R * package
       - cd package
       - zip -r ../function.zip .
-      - cd ..
 
   post_build:
     commands:
-      - echo "☁️ Uploading ZIP to S3..."
       - aws s3 cp function.zip s3://$S3_BUCKET/$S3_KEY
-      - echo "🚀 Updating Lambda function..."
       - aws lambda update-function-code \
           --function-name $LAMBDA_FUNCTION_NAME \
           --s3-bucket $S3_BUCKET \
           --s3-key $S3_KEY \
           --publish
-      - echo "🎉 Deployment complete!"
 
 artifacts:
   files:
