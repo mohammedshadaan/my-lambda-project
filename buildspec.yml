@@ -20,12 +20,11 @@ phases:
       - mkdir -p output
       - echo "Creating Lambda deployment package..."
 
-      # IMPORTANT: Zip ONLY files in the root — no folder nesting
       - zip -r output/function.zip . \
-          -x "./buildspec.yml" \
-             "./.git/*" \
-             "*.md" \
-             "node_modules/.cache/*"
+          -x buildspec.yml \
+          -x "*.md" \
+          -x ".git/*" \
+          -x "node_modules/.cache/*"
 
       - echo "Listing contents of ZIP package:"
       - unzip -l output/function.zip
@@ -41,7 +40,6 @@ phases:
           --s3-bucket "$S3_BUCKET_NAME" \
           --s3-key "job_campaign_worker/function.zip" \
           --publish
-
       - echo "Deployment complete!"
 
 artifacts:
