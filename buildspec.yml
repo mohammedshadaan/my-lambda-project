@@ -18,23 +18,24 @@ phases:
     commands:
       - echo "🏗️ Starting build..."
       - mkdir -p package
-      - cp -R * package
+      - echo "📁 Copying project files (excluding package folder)..."
+      - shopt -s extglob
+      - cp -R !(package) package
       - cd package
+      - echo "📦 Creating Lambda ZIP..."
       - zip -r ../function.zip . -x "*.md" "*.git*" "buildspec*" ".git/*" "node_modules/.cache/*"
       - cd ..
 
   post_build:
     commands:
-      - echo "☁️ Uploading ZIP to S3 folder job_campaign_worker..."
+      - echo "☁️ Uploading ZIP to S3..."
       - aws s3 cp function.zip s3://$S3_BUCKET_NAME/job_campaign_worker/function.zip
-
       - echo "🚀 Updating Lambda function..."
       - aws lambda update-function-code \
           --function-name $LAMBDA_FUNCTION_NAME \
           --s3-bucket $S3_BUCKET_NAME \
           --s3-key job_campaign_worker/function.zip \
           --publish
-
       - echo "🎉 Lambda updated successfully!"
 
 artifacts:
