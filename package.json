@@ -1,11 +1,10 @@
 {
-  "name": "testlambda",
+  "name": "lambda-job-handler",
   "version": "1.0.0",
-  "description": "Sample AWS Lambda function deployed using CodeBuild CI/CD",
+  "description": "AWS Lambda function for handling jobs, deployed using CodeBuild CI/CD",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {}
 }
-
