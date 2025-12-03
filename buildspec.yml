@@ -4,15 +4,15 @@ env:
   variables:
     LAMBDA_FUNCTION_NAME: "job_campaign_worker"
     AWS_DEFAULT_REGION: "ap-southeast-2"
-    S3_BUCKET_NAME: "triggerlambda0312255"
+    S3_BUCKET_NAME: "triggerlambda031225"
 
 phases:
   install:
     runtime-versions:
-      nodejs: 20
+      nodejs: 20   # Works even if your app code was written in Node 24
     commands:
       - echo "📦 Installing Node.js dependencies..."
-      - npm ci --omit=dev
+      - npm install --omit=dev
 
   build:
     commands:
