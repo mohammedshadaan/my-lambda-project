@@ -12,7 +12,7 @@ phases:
       nodejs: 20
     commands:
       - echo "Installing Node.js dependencies..."
-      - npm install --production || true
+      - npm ci --omit=dev || true
  
   build:
     commands:
@@ -20,16 +20,28 @@ phases:
       - mkdir -p output
       - echo "Creating Lambda deployment package..."
       - zip -r output/function.zip . -x "buildspec*" "*.git*" "*.md" "node_modules/.cache/*"
+
+      # 👇 NEW — SHOW ZIP CONTENTS IN LOGS
+      - echo "Listing contents of ZIP package:"
+      - unzip -l output/function.zip
  
   post_build:
     commands:
       - echo "Build completed on $(date)"
       - echo "Uploading package to S3..."
       - aws s3 cp output/function.zip s3://$S3_BUCKET_NAME/job_campaign_worker/function.zip
-      - echo "Checking uploaded file..."
+
+      # 👇 NEW — VERIFY S3 UPLOAD
+      - echo "Checking uploaded file in S3..."
       - aws s3 ls s3://$S3_BUCKET_NAME/job_campaign_worker/
+
       - echo "Updating Lambda function code..."
-      - aws lambda update-function-code --function-name $LAMBDA_FUNCTION_NAME --s3-bucket $S3_BUCKET_NAME --s3-key job_campaign_worker/function.zip --publish
+      - aws lambda update-function-code \
+          --function-name $LAMBDA_FUNCTION_NAME \
+          --s3-bucket $S3_BUCKET_NAME \
+          --s3-key job_campaign_worker/function.zip \
+          --publish
+
       - echo "Lambda function code updated successfully!"
  
 artifacts:
