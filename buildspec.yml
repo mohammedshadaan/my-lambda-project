@@ -4,36 +4,31 @@ env:
   variables:
     LAMBDA_FUNCTION_NAME: "job_campaign_worker"
     AWS_DEFAULT_REGION: "ap-southeast-2"
-    S3_BUCKET_NAME: "triggerlambda031225"
+    S3_BUCKET_NAME: "triggerlambda0312255"
 
 phases:
   install:
-    runtime-versions:
-      nodejs: 20
     commands:
       - echo "Installing dependencies..."
-      - npm ci --omit=dev || true
+      - pip install --upgrade pip
+      - pip install -r requirements.txt -t ./package
+
+  pre_build:
+    commands:
+      - echo "Preparing zip package..."
+      - mkdir -p output
+      - cd package
+      - zip -r ../output/function.zip .
+      - cd ..
+      - zip -g output/function.zip lambda_function.py
 
   build:
     commands:
-      - echo "Build started..."
-      - mkdir -p output
-      - echo "Creating Lambda deployment package..."
-
-      - zip -r output/function.zip . \
-          -x buildspec.yml \
-          -x "*.md" \
-          -x ".git/*" \
-          -x "node_modules/.cache/*"
-
-      - echo "Listing contents of ZIP package:"
-      - unzip -l output/function.zip
+      - echo "Uploading function.zip to S3..."
+      - aws s3 cp output/function.zip s3://$S3_BUCKET_NAME/job_campaign_worker/function.zip
 
   post_build:
     commands:
-      - echo "Uploading to S3..."
-      - aws s3 cp output/function.zip s3://$S3_BUCKET_NAME/job_campaign_worker/function.zip
-
       - echo "Updating Lambda function..."
       - aws lambda update-function-code \
           --function-name "$LAMBDA_FUNCTION_NAME" \
@@ -45,4 +40,3 @@ phases:
 artifacts:
   files:
     - output/function.zip
-  discard-paths: yes
