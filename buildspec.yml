@@ -1,39 +1,38 @@
 version: 0.2
- 
+
 env:
   variables:
     LAMBDA_FUNCTION_NAME: "job_campaign_worker"
     AWS_DEFAULT_REGION: "ap-southeast-2"
     S3_BUCKET_NAME: "triggerlambda031225"
- 
+
 phases:
   install:
     runtime-versions:
       nodejs: 20
     commands:
+      - echo "Installing dependencies..."
       - npm ci --omit=dev || true
- 
+
   build:
     commands:
+      - echo "Build started..."
       - mkdir -p output
+      - echo "Creating Lambda deployment package..."
       - zip -r output/function.zip . -x "buildspec*" "*.git*" "*.md" "node_modules/.cache/*"
-      - echo "ZIP contents:"
+      - echo "Listing contents of ZIP package:"
       - unzip -l output/function.zip
- 
+
   post_build:
     commands:
       - echo "Uploading to S3..."
       - aws s3 cp output/function.zip s3://$S3_BUCKET_NAME/job_campaign_worker/function.zip
 
       - echo "Updating Lambda function..."
-      - aws lambda update-function-code \
-          --function-name "$LAMBDA_FUNCTION_NAME" \
-          --s3-bucket "$S3_BUCKET_NAME" \
-          --s3-key "job_campaign_worker/function.zip" \
-          --publish
+      - aws lambda update-function-code --function-name "$LAMBDA_FUNCTION_NAME" --s3-bucket "$S3_BUCKET_NAME" --s3-key "job_campaign_worker/function.zip" --publish
 
       - echo "Deployment complete!"
- 
+
 artifacts:
   files:
     - output/function.zip
