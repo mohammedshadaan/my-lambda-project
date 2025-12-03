@@ -9,7 +9,7 @@ env:
 phases:
   install:
     runtime-versions:
-      nodejs: 20   # Works even if your app code was written in Node 24
+      nodejs: 20
     commands:
       - echo "📦 Installing Node.js dependencies..."
       - npm install --omit=dev
@@ -18,23 +18,23 @@ phases:
     commands:
       - echo "🏗️ Starting build..."
       - mkdir -p package
-      - echo "📁 Copying files to package folder..."
       - cp -R * package
       - cd package
-      - echo "📦 Creating clean Lambda zip package..."
       - zip -r ../function.zip . -x "*.md" "*.git*" "buildspec*" ".git/*" "node_modules/.cache/*"
       - cd ..
 
   post_build:
     commands:
-      - echo "☁️ Uploading function.zip to S3..."
-      - aws s3 cp function.zip s3://$S3_BUCKET_NAME/testlambda/function.zip
+      - echo "☁️ Uploading ZIP to S3 folder job_campaign_worker..."
+      - aws s3 cp function.zip s3://$S3_BUCKET_NAME/job_campaign_worker/function.zip
+
       - echo "🚀 Updating Lambda function..."
       - aws lambda update-function-code \
           --function-name $LAMBDA_FUNCTION_NAME \
           --s3-bucket $S3_BUCKET_NAME \
-          --s3-key testlambda/function.zip \
+          --s3-key job_campaign_worker/function.zip \
           --publish
+
       - echo "🎉 Lambda updated successfully!"
 
 artifacts:
