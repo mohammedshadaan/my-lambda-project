@@ -1,5 +1,5 @@
 {
-  "name": "lambda-job-handler",
+  "name": "job_campaign_worker",
   "version": "1.0.0",
   "description": "AWS Lambda function for handling jobs, deployed using CodeBuild CI/CD",
   "main": "index.js",
