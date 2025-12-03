@@ -1,27 +1,43 @@
 version: 0.2
+
 env:
   variables:
-    LAMBDA_FUNCTION_NAME: "testlambda"
+    LAMBDA_FUNCTION_NAME: "job_campaign_worker"
     AWS_DEFAULT_REGION: "ap-southeast-2"
+    S3_BUCKET_NAME: "triggerlambda0312255"
+
 phases:
   install:
     runtime-versions:
       nodejs: 20
     commands:
-      - echo Installing Node.js dependencies...
-      - npm install --production
+      - echo "📦 Installing Node.js dependencies..."
+      - npm ci --omit=dev
+
   build:
     commands:
-      - echo Build started
-      - echo Creating Lambda deployment package...
-      - zip -r function.zip . -x "buildspec*" "*.git*" "*.md" "node_modules/.cache/*"
+      - echo "🏗️ Starting build..."
+      - mkdir -p package
+      - echo "📁 Copying files to package folder..."
+      - cp -R * package
+      - cd package
+      - echo "📦 Creating clean Lambda zip package..."
+      - zip -r ../function.zip . -x "*.md" "*.git*" "buildspec*" ".git/*" "node_modules/.cache/*"
+      - cd ..
+
   post_build:
     commands:
-      - echo Build completed on `date`
-      - echo Updating Lambda function code...
-      - aws lambda update-function-code --function-name $LAMBDA_FUNCTION_NAME --zip-file fileb://function.zip --publish
-      - echo Lambda function code updated successfully!
+      - echo "☁️ Uploading function.zip to S3..."
+      - aws s3 cp function.zip s3://$S3_BUCKET_NAME/testlambda/function.zip
+      - echo "🚀 Updating Lambda function..."
+      - aws lambda update-function-code \
+          --function-name $LAMBDA_FUNCTION_NAME \
+          --s3-bucket $S3_BUCKET_NAME \
+          --s3-key testlambda/function.zip \
+          --publish
+      - echo "🎉 Lambda updated successfully!"
+
 artifacts:
   files:
-    - 'function.zip'
+    - function.zip
   discard-paths: yes
