@@ -1,8 +1,3 @@
-// index.js
-
-// ✅ AWS Lambda function deployed via CodePipeline + CodeBuild
-// Demonstrates: logging, environment variables, structured response, and error handling
-
 exports.handler = async (event) => {
   console.log("🚀 Lambda execution started:", new Date().toISOString());
   console.log("📦 Incoming event:", JSON.stringify(event, null, 2));
