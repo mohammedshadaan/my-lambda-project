@@ -34,10 +34,10 @@ phases:
       - aws s3 cp output/function.zip s3://$S3_BUCKET_NAME/job_campaign_worker/function.zip
 
       - echo "Updating Lambda function..."
-      - aws lambda update-function-code \
-          --function-name $LAMBDA_FUNCTION_NAME \
-          --s3-bucket $S3_BUCKET_NAME \
-          --s3-key job_campaign_worker/function.zip \
+      - aws lambda update-function-code 
+          --function-name $LAMBDA_FUNCTION_NAME 
+          --s3-bucket $S3_BUCKET_NAME 
+          --s3-key job_campaign_worker/function.zip 
           --publish
 
       - echo "Deployment completed successfully!"
