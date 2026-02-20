@@ -21,8 +21,8 @@ phases:
       - mkdir -p output
 
       - echo "Creating Lambda deployment package..."
-      # IMPORTANT: Zip only required files (root-level)
-      - zip -r output/function.zip index.js package.json node_modules
+      # IMPORTANT: Adjust to match your actual file (index.mjs)
+      - zip -r output/function.zip index.mjs package.json node_modules
 
       - echo "Verifying zip file..."
       - ls -lh output/function.zip
@@ -34,11 +34,7 @@ phases:
       - aws s3 cp output/function.zip s3://$S3_BUCKET_NAME/job_campaign_worker/function.zip
 
       - echo "Updating Lambda function..."
-      - aws lambda update-function-code \
-          --function-name $LAMBDA_FUNCTION_NAME \
-          --s3-bucket $S3_BUCKET_NAME \
-          --s3-key job_campaign_worker/function.zip \
-          --publish
+      - aws lambda update-function-code --function-name $LAMBDA_FUNCTION_NAME --s3-bucket $S3_BUCKET_NAME --s3-key job_campaign_worker/function.zip --publish
 
       - echo "Deployment completed successfully!"
 
