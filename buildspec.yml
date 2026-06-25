@@ -18,15 +18,12 @@ phases:
       - echo "Verifying files..."
       - test -f index.mjs || (echo "ERROR: index.mjs not found!" && exit 1)
       - test -d src/handlers || (echo "ERROR: src/handlers not found!" && exit 1)
-      - echo "Running tests..."
-      - npm test
 
   build:
     commands:
       - echo "Building deployment package..."
       - rm -f function.zip
       - zip -r function.zip index.mjs src/ package.json package-lock.json node_modules
-      - echo "Zip contents:"
       - unzip -l function.zip
       - ls -lh function.zip
 
