@@ -2,7 +2,8 @@ version: 0.2
 
 env:
   variables:
-    LAMBDA_FUNCTION_NAME: "jobcampaignworker"
+    LAMBDA_FUNCTION_DEV: "jobcampaignworker-dev"
+    LAMBDA_FUNCTION_PROD: "jobcampaignworker-prod"
     AWS_DEFAULT_REGION: "ap-southeast-2"
 
 phases:
@@ -13,20 +14,44 @@ phases:
       - echo "Installing production dependencies..."
       - npm ci --omit=dev
 
+  pre_build:
+    commands:
+      - echo "Verifying handler file exists..."
+      - test -f index.mjs || (echo "ERROR: index.mjs not found!" && exit 1)
+      - node --version
+
   build:
     commands:
       - echo "Cleaning old package..."
       - rm -f function.zip
-
-      - echo "Creating deployment package from root..."
-      - zip -r function.zip index.js package.json package-lock.json node_modules
-
-      - echo "Verify zip contents..."
+      - echo "Creating deployment package..."
+      - zip -r function.zip index.mjs package.json package-lock.json node_modules
+      - echo "Zip contents:"
       - unzip -l function.zip
+      - echo "Artifact size:"
+      - ls -lh function.zip
 
   post_build:
     commands:
-      - echo "Updating Lambda directly (no S3)..."
-      - aws lambda update-function-code --function-name "$LAMBDA_FUNCTION_NAME" --zip-file fileb://function.zip --publish
+      - echo "Deploying to DEV..."
+      - aws lambda update-function-code
+          --function-name "$LAMBDA_FUNCTION_DEV"
+          --zip-file fileb://function.zip
+          --publish
+      - echo "Waiting for DEV update..."
+      - aws lambda wait function-updated --function-name "$LAMBDA_FUNCTION_DEV"
+      - echo "DEV deployed successfully!"
+      - echo "---"
+      - echo "Deploying to PROD..."
+      - aws lambda update-function-code
+          --function-name "$LAMBDA_FUNCTION_PROD"
+          --zip-file fileb://function.zip
+          --publish
+      - echo "Waiting for PROD update..."
+      - aws lambda wait function-updated --function-name "$LAMBDA_FUNCTION_PROD"
+      - echo "PROD deployed successfully!"
 
-      - echo "Deployment completed successfully!"
+artifacts:
+  files:
+    - function.zip
+  discard-paths: yes
