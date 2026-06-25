@@ -11,24 +11,24 @@ phases:
     runtime-versions:
       nodejs: 20
     commands:
-      - echo "Installing production dependencies..."
+      - echo "Installing dependencies..."
       - npm ci --omit=dev
 
   pre_build:
     commands:
-      - echo "Verifying handler file exists..."
+      - echo "Verifying files..."
       - test -f index.mjs || (echo "ERROR: index.mjs not found!" && exit 1)
-      - node --version
+      - test -d src/handlers || (echo "ERROR: src/handlers not found!" && exit 1)
+      - echo "Running tests..."
+      - npm test
 
   build:
     commands:
-      - echo "Cleaning old package..."
+      - echo "Building deployment package..."
       - rm -f function.zip
-      - echo "Creating deployment package..."
-      - zip -r function.zip index.mjs package.json package-lock.json node_modules
+      - zip -r function.zip index.mjs src/ package.json package-lock.json node_modules
       - echo "Zip contents:"
       - unzip -l function.zip
-      - echo "Artifact size:"
       - ls -lh function.zip
 
   post_build:
@@ -38,18 +38,16 @@ phases:
           --function-name "$LAMBDA_FUNCTION_DEV"
           --zip-file fileb://function.zip
           --publish
-      - echo "Waiting for DEV update..."
       - aws lambda wait function-updated --function-name "$LAMBDA_FUNCTION_DEV"
-      - echo "DEV deployed successfully!"
+      - echo "DEV deployed!"
       - echo "---"
       - echo "Deploying to PROD..."
       - aws lambda update-function-code
           --function-name "$LAMBDA_FUNCTION_PROD"
           --zip-file fileb://function.zip
           --publish
-      - echo "Waiting for PROD update..."
       - aws lambda wait function-updated --function-name "$LAMBDA_FUNCTION_PROD"
-      - echo "PROD deployed successfully!"
+      - echo "PROD deployed!"
 
 artifacts:
   files:

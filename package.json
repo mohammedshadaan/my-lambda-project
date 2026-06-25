@@ -1,12 +1,11 @@
 {
   "name": "job_campaign_worker",
   "version": "1.0.0",
-  "description": "AWS Lambda function for handling jobs, deployed using CodePipeline CI/CD",
+  "description": "AWS Lambda REST API — GET/POST endpoints, deployed via CodePipeline",
   "type": "module",
   "main": "index.mjs",
   "scripts": {
-    "start": "node index.mjs",
-    "test": "node --input-type=module --eval \"import('./index.mjs').then(m => m.handler({test:true}).then(r => console.log(JSON.stringify(r,null,2))))\""
+    "test": "node test.mjs"
   },
   "dependencies": {}
 }
