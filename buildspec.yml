@@ -32,13 +32,10 @@ phases:
 
   post_build:
     commands:
-      - echo "Deploying to DEV..."
-      - aws lambda update-function-code
-          --function-name "$LAMBDA_FUNCTION_DEV"
-          --zip-file fileb://function.zip
-          --publish
-      - aws lambda wait function-updated --function-name "$LAMBDA_FUNCTION_DEV"
-      - echo "DEV deployed!"
+      - echo "Deploying..."
+      - aws lambda update-function-code --function-name "$LAMBDA_FUNCTION" --zip-file fileb://function.zip --publish
+      - aws lambda wait function-updated --function-name "$LAMBDA_FUNCTION"
+      - echo "Deployed!"
 
 artifacts:
   files:
