@@ -3,7 +3,6 @@ version: 0.2
 env:
   variables:
     LAMBDA_FUNCTION_DEV: "jobcampaignworker-dev"
-    LAMBDA_FUNCTION_PROD: "jobcampaignworker-prod"
     AWS_DEFAULT_REGION: "ap-southeast-2"
 
 phases:
@@ -40,14 +39,6 @@ phases:
           --publish
       - aws lambda wait function-updated --function-name "$LAMBDA_FUNCTION_DEV"
       - echo "DEV deployed!"
-      - echo "---"
-      - echo "Deploying to PROD..."
-      - aws lambda update-function-code
-          --function-name "$LAMBDA_FUNCTION_PROD"
-          --zip-file fileb://function.zip
-          --publish
-      - aws lambda wait function-updated --function-name "$LAMBDA_FUNCTION_PROD"
-      - echo "PROD deployed!"
 
 artifacts:
   files:
