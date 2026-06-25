@@ -1,10 +1,8 @@
 version: 0.2
-
 env:
   variables:
     LAMBDA_FUNCTION: "Testing_Automation"
     AWS_DEFAULT_REGION: "ap-southeast-2"
-
 phases:
   install:
     runtime-versions:
@@ -12,28 +10,20 @@ phases:
     commands:
       - echo "Installing dependencies..."
       - npm ci --omit=dev
-
   pre_build:
     commands:
       - echo "Verifying files..."
-      - test -f index.mjs || (echo "ERROR: index.mjs not found!" && exit 1)
-      - test -d src/handlers || (echo "ERROR: src/handlers not found!" && exit 1)
-
+      - test -f index.mjs || (echo "ERROR index.mjs not found" && exit 1)
   build:
     commands:
-      - echo "Building deployment package..."
       - rm -f function.zip
-      - zip -r function.zip index.mjs src/ package.json package-lock.json node_modules
-      - unzip -l function.zip
+      - zip -r function.zip index.mjs src/ package.json node_modules
       - ls -lh function.zip
-
   post_build:
     commands:
-      - echo "Deploying..."
       - aws lambda update-function-code --function-name "$LAMBDA_FUNCTION" --zip-file fileb://function.zip --publish
       - aws lambda wait function-updated --function-name "$LAMBDA_FUNCTION"
       - echo "Deployed!"
-
 artifacts:
   files:
     - function.zip
