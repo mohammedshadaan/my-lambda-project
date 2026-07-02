@@ -24,7 +24,7 @@ export const handler = async (event) => {
       return await createItem(event);
     }
 
-    // 404 for anything else
+   // 404 for anything else
     return response(404, { error: 'Route not found', path, method });
 
   } catch (err) {
