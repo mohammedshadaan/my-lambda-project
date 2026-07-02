@@ -1,10 +1,8 @@
 version: 0.2
-
 env:
   variables:
     LAMBDA_FUNCTION: "test-lambda-function"
     AWS_DEFAULT_REGION: "ap-southeast-2"
-
 phases:
   install:
     runtime-versions:
@@ -12,24 +10,20 @@ phases:
     commands:
       - echo "Installing dependencies..."
       - npm install
-
   pre_build:
     commands:
       - echo "Verifying files..."
       - test -f index.mjs || (echo "ERROR index.mjs not found" && exit 1)
-
   build:
     commands:
       - rm -f function.zip
-      - zip -r function.zip index.mjs src/ package.json
+      - zip -r function.zip index.mjs package.json node_modules
       - ls -lh function.zip
-
   post_build:
     commands:
       - aws lambda update-function-code --function-name "$LAMBDA_FUNCTION" --zip-file fileb://function.zip --publish
       - aws lambda wait function-updated --function-name "$LAMBDA_FUNCTION"
       - echo "Deployed!"
-
 artifacts:
   files:
     - function.zip
