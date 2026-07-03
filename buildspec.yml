@@ -1,40 +1,34 @@
 version: 0.2
-
 env:
   variables:
-    S3_BUCKET: "triggerlambda031225"
     LAMBDA_FUNCTION: "test-lambda-function"
-
+    AWS_DEFAULT_REGION: "ap-southeast-2"
 phases:
   install:
     runtime-versions:
-      nodejs: 18
-  
+      nodejs: 22
+    commands:
+      - echo "Installing dependencies..."
+      - npm install
   pre_build:
     commands:
-      - echo "Starting pre-build phase..."
-  
+      - echo "Current directory contents:"
+      - pwd
+      - ls -la
+      - echo "Searching for index.mjs anywhere in repo..."
+      - find . -name "index.mjs" -not -path "*/node_modules/*"
+      - test -f index.mjs || (echo "ERROR: index.mjs not found at repo root" && exit 1)
   build:
     commands:
-      - echo "Cleaning old package..."
       - rm -f function.zip
-      - echo "Creating deployment package..."
-      - zip -r function.zip index.mjs package.json package-lock.json node_modules
-      - echo "Verifying zip contents..."
-      - unzip -l function.zip
-      - echo "Uploading package to S3..."
-      - aws s3 cp function.zip "s3://$S3_BUCKET/builds/function-$CODEBUILD_RESOLVED_SOURCE_VERSION.zip"
-  
+      - zip -r function.zip index.mjs package.json node_modules
+      - ls -lh function.zip
   post_build:
     commands:
-      - echo "Deploying new code to Lambda from S3..."
-      - |
-        aws lambda update-function-code \
-          --function-name $LAMBDA_FUNCTION \
-          --s3-bucket $S3_BUCKET \
-          --s3-key "builds/function-$CODEBUILD_RESOLVED_SOURCE_VERSION.zip"
-      - echo "Waiting for function update to complete..."
-      - aws lambda wait function-updated --function-name $LAMBDA_FUNCTION
-      - echo "Lambda function updated successfully!"
-      - echo "Getting updated function info..."
-      - aws lambda get-function --function-name $LAMBDA_FUNCTION --query 'Configuration.[FunctionName,LastModified,CodeSha256]'
+      - aws lambda update-function-code --function-name "$LAMBDA_FUNCTION" --zip-file fileb://function.zip --publish
+      - aws lambda wait function-updated --function-name "$LAMBDA_FUNCTION"
+      - echo "Deployed!"
+artifacts:
+  files:
+    - function.zip
+  discard-paths: yes
