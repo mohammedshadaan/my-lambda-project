@@ -2,18 +2,18 @@ version: 0.2
 
 env:
   variables:
+    LAMBDA_FUNCTION_NAME: "test-lambda-function"
     S3_BUCKET: "triggerlambda031225"
-    LAMBDA_FUNCTION: "test-lambda-function"
+    AWS_DEFAULT_REGION: "ap-southeast-2"
 
 phases:
   install:
     runtime-versions:
-      nodejs: 18
-  
-  pre_build:
+      nodejs: 20
     commands:
-      - echo "Starting pre-build phase..."
-  
+      - echo "Installing production dependencies..."
+      - npm ci --omit=dev
+
   build:
     commands:
       - echo "Cleaning old package..."
@@ -24,17 +24,20 @@ phases:
       - unzip -l function.zip
       - echo "Uploading package to S3..."
       - aws s3 cp function.zip "s3://$S3_BUCKET/builds/function-$CODEBUILD_RESOLVED_SOURCE_VERSION.zip"
-  
+
   post_build:
     commands:
       - echo "Deploying new code to Lambda from S3..."
-      - |
-        aws lambda update-function-code \
-          --function-name $LAMBDA_FUNCTION \
-          --s3-bucket $S3_BUCKET \
-          --s3-key "builds/function-$CODEBUILD_RESOLVED_SOURCE_VERSION.zip"
-      - echo "Waiting for function update to complete..."
-      - aws lambda wait function-updated --function-name $LAMBDA_FUNCTION
-      - echo "Lambda function updated successfully!"
-      - echo "Getting updated function info..."
-      - aws lambda get-function --function-name $LAMBDA_FUNCTION --query 'Configuration.[FunctionName,LastModified,CodeSha256]'
+      - >
+        aws lambda update-function-code
+        --function-name "$LAMBDA_FUNCTION_NAME"
+        --s3-bucket "$S3_BUCKET"
+        --s3-key "builds/function-$CODEBUILD_RESOLVED_SOURCE_VERSION.zip"
+        --publish
+      - aws lambda wait function-updated --function-name "$LAMBDA_FUNCTION_NAME"
+      - echo "Deployment completed successfully!"
+
+artifacts:
+  files:
+    - function.zip
+  discard-paths: yes
