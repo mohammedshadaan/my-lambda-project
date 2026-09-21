@@ -11,16 +11,17 @@ phases:
     runtime-versions:
       nodejs: 20
     commands:
-      - echo "Installing production dependencies..."
+      - echo "Installing dependencies..."
       - npm ci --omit=dev
 
   build:
     commands:
       - echo "Cleaning old package..."
       - rm -f function.zip
-      - mkdir -p node_modules
-      - echo "Creating deployment package for S3 backup..."
-      - zip -r function.zip index.mjs package.json package-lock.json node_modules *.html *.css index.js customer-dashboards images partner-registration-forms start-flow styles
+      - echo "Creating lightweight deployment package (<5MB)..."
+      - zip -r function.zip index.mjs package.json src public *.html *.css index.js 2>/dev/null || zip -r function.zip index.mjs package.json src public
+      - echo "Verifying package size..."
+      - ls -lh function.zip
       - echo "Uploading package backup to S3..."
       - aws s3 cp function.zip "s3://$S3_BUCKET/builds/function-$CODEBUILD_RESOLVED_SOURCE_VERSION.zip"
 
@@ -37,17 +38,11 @@ phases:
       - echo "Deployment completed successfully!"
 
 artifacts:
-  # List the raw files directly so CodePipeline packages them correctly at the root of the Lambda deployment
   files:
     - index.mjs
     - package.json
-    - package-lock.json
-    - node_modules/**/*
+    - 'src/**/*'
+    - 'public/**/*'
     - '*.html'
     - '*.css'
     - 'index.js'
-    - 'customer-dashboards/**/*'
-    - 'images/**/*'
-    - 'partner-registration-forms/**/*'
-    - 'start-flow/**/*'
-    - 'styles/**/*'
