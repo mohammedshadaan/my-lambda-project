@@ -1,4 +1,4 @@
-import { response } from '../../index.mjs';
+import { response } from '../utils/response.mjs';
 
 // POST /items — creates a new item
 export const createItem = async (event) => {

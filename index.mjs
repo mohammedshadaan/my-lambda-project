@@ -1,5 +1,6 @@
 import { getItems, getItemById } from './src/handlers/getHandler.mjs';
 import { createItem } from './src/handlers/postHandler.mjs';
+import { response } from './src/utils/response.mjs';
 
 export const handler = async (event) => {
   console.log("Request:", JSON.stringify({ method: event.httpMethod, path: event.path }));
@@ -32,12 +33,3 @@ export const handler = async (event) => {
     return response(500, { error: 'Internal server error', message: err.message });
   }
 };
-
-export const response = (statusCode, body) => ({
-  statusCode,
-  headers: {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-  },
-  body: JSON.stringify(body),
-});

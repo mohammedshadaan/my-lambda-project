@@ -1,4 +1,4 @@
-import { response } from '../../index.mjs';
+import { response } from '../utils/response.mjs';
 
 // In-memory store (replace with DynamoDB/RDS in production)
 const items = [
